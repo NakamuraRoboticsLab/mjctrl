@@ -2,6 +2,8 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 import time
+import csv
+from typing import List, Tuple
 
 # Integration timestep in seconds. This corresponds to the amount of time the joint
 # velocities will be integrated for to obtain the desired joint positions.
@@ -26,12 +28,22 @@ dt: float = 0.002
 Kn = np.asarray([10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 5.0])
 
 # Maximum allowable joint velocity in rad/s.
-max_angvel = 3 # 0.785
+max_angvel = 3  # 0.785
+
+def log_trajectories(filename: str, mocap_traj: List[Tuple[float, float, float, float]], site_traj: List[Tuple[float, float, float, float]]) -> None:
+    """
+    Log the trajectories of mocap and site positions to a CSV file.
+    Each row: [mocap_x, mocap_y, mocap_z, site_x, site_y, site_z]
+    """
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["time", "mocap_x", "mocap_y", "mocap_z", "site_x", "site_y", "site_z"])
+        for mocap, site in zip(mocap_traj, site_traj):
+            writer.writerow(list(mocap) + list(site))
 
 def pose(time):
-    time *= 0.5
-    pos = (0.1 * np.cos(2 * np.pi * 0.5 * time) + 0.4,
-           0.1 * np.sin(2 * np.pi * 0.5 * time) + 0.4,
+    pos = (0.1 * np.cos(0.5 * np.pi * time) + 0.4,
+           0.1 * np.sin(0.5 * np.pi * time) + 0.4,
            0.3)
     quat = np.array((1.0, np.sin(2 * time), np.sin(2 * time), 0))
     quat /= np.linalg.norm(quat)
@@ -87,6 +99,10 @@ def main() -> None:
     site_quat_conj = np.zeros(4)
     error_quat = np.zeros(4)
 
+    # Trajectory lists for logging
+    mocap_traj: List[Tuple[float, float, float, float]] = []
+    site_traj: List[Tuple[float, float, float, float]] = []
+
     with mujoco.viewer.launch_passive(
         model=model,
         data=data,
@@ -102,7 +118,7 @@ def main() -> None:
         # Enable site frame visualization.
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
-        while viewer.is_running():
+        while viewer.is_running() and data.time < 4.0:
             step_start = time.time()
 
             data.mocap_pos[mocap_id, 0:3], data.mocap_quat[mocap_id] = pose(data.time)
@@ -139,10 +155,19 @@ def main() -> None:
             data.ctrl[actuator_ids] = q[dof_ids]
             mujoco.mj_step(model, data)
 
+            # Log mocap and site positions
+            mocap_pos = data.mocap_pos[mocap_id, 0:3]
+            site_pos = data.site(site_id).xpos
+            mocap_traj.append((data.time, float(mocap_pos[0]), float(mocap_pos[1]), float(mocap_pos[2])))
+            site_traj.append((data.time, float(site_pos[0]), float(site_pos[1]), float(site_pos[2])))
+
             viewer.sync()
             time_until_next_step = dt - (time.time() - step_start)
             if time_until_next_step > 0:
                 time.sleep(time_until_next_step)
+
+    # After simulation, save trajectories
+    log_trajectories("trajectories.csv", mocap_traj, site_traj)
 
 
 if __name__ == "__main__":
