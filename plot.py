@@ -56,8 +56,10 @@ def plot_csv_time(
     t_new = pd.to_numeric(df.iloc[:, time_col], errors="coerce")
     mocap_x = pd.to_numeric(df.iloc[:, mocap_x_col], errors="coerce")
     mocap_y = pd.to_numeric(df.iloc[:, mocap_y_col], errors="coerce")
+    mocap_z = pd.to_numeric(df.iloc[:, mocap_z_col], errors="coerce")
     site_x = pd.to_numeric(df.iloc[:, site_x_col], errors="coerce")
     site_y = pd.to_numeric(df.iloc[:, site_y_col], errors="coerce")
+    site_z = pd.to_numeric(df.iloc[:, site_z_col], errors="coerce")
 
     # Extract quaternion data
     mocap_quat_w = pd.to_numeric(df.iloc[:, mocap_quat_cols[0]],
@@ -77,26 +79,6 @@ def plot_csv_time(
                                 errors="coerce")
     site_quat_z = pd.to_numeric(df.iloc[:, site_quat_cols[3]],
                                 errors="coerce")
-
-    # Clean NaNs
-    mask = ((~mocap_x.isna()) & (~mocap_y.isna()) & (~site_x.isna()) &
-            (~site_y.isna()) & (~t_raw.isna()) & (~mocap_quat_w.isna()) &
-            (~mocap_quat_x.isna()) & (~mocap_quat_y.isna()) &
-            (~mocap_quat_z.isna()) & (~site_quat_w.isna()) &
-            (~site_quat_x.isna()) & (~site_quat_y.isna()) &
-            (~site_quat_z.isna()))
-    
-    t_raw, mocap_x, mocap_y, site_x, site_y = (
-        t_raw[mask], mocap_x[mask], mocap_y[mask], site_x[mask], site_y[mask]
-    )
-    (mocap_quat_w, mocap_quat_x, mocap_quat_y, mocap_quat_z) = (
-        mocap_quat_w[mask], mocap_quat_x[mask], mocap_quat_y[mask],
-        mocap_quat_z[mask]
-    )
-    (site_quat_w, site_quat_x, site_quat_y, site_quat_z) = (
-        site_quat_w[mask], site_quat_x[mask], site_quat_y[mask],
-        site_quat_z[mask]
-    )
 
     # Parse time
     is_datetime = False
@@ -130,31 +112,17 @@ def plot_csv_time(
     print(f"Final t first few: {t.head()}")
     print(f"is_datetime: {is_datetime}")
 
-    # Clean invalid times
-    valid = ~pd.isna(t)
-    t_new, mocap_x, mocap_y, site_x, site_y = (
-        t_new[valid], mocap_x[valid], mocap_y[valid], site_x[valid], site_y[valid]
-    )
-    (mocap_quat_w, mocap_quat_x, mocap_quat_y, mocap_quat_z) = (
-        mocap_quat_w[valid], mocap_quat_x[valid], mocap_quat_y[valid],
-        mocap_quat_z[valid]
-    )
-    (site_quat_w, site_quat_x, site_quat_y, site_quat_z) = (
-        site_quat_w[valid], site_quat_x[valid], site_quat_y[valid],
-        site_quat_z[valid]
-    )
-
     print(f"Data points: {len(t)} time points")
     print("Creating plots with dual trajectory mode")
 
     # Build plots - create figure with position and quaternion data
-    fig, axes = plt.subplots(2, figsize=(5, 12), constrained_layout=True)
+    fig, axes = plt.subplots(3, figsize=(8, 12), constrained_layout=True)
     
     # Position plots
     # mocap x(t)
     axes[0].plot(t_new, mocap_x, label=labels[0], color='blue')
     axes[0].plot(t_new, site_x, label=labels[1], color='red')
-    axes[0].set_ylabel("x")
+    axes[0].set_ylabel("x [m]")
     axes[0].legend()
     axes[0].grid(True, linestyle="--", alpha=0.5)
 
@@ -167,7 +135,7 @@ def plot_csv_time(
     # mocap y(t)
     axes[1].plot(t_new, mocap_y, label=labels[0], color='blue')
     axes[1].plot(t_new, site_y, label=labels[1], color='red')
-    axes[1].set_ylabel("y")
+    axes[1].set_ylabel("y [m]")
     axes[1].legend()
     axes[1].grid(True, linestyle="--", alpha=0.5)
 
@@ -176,6 +144,14 @@ def plot_csv_time(
     # axes[1, 1].set_ylabel("site_y")
     # axes[1, 1].legend()
     # axes[1, 1].grid(True, linestyle="--", alpha=0.5)
+
+    # mocap z(t)
+    axes[2].plot(t_new, mocap_z, label=labels[0], color='blue')
+    axes[2].plot(t_new, site_z, label=labels[1], color='red')
+    axes[2].set_xlabel("Time [s]")
+    axes[2].set_ylabel("z [m]")
+    axes[2].legend()
+    axes[2].grid(True, linestyle="--", alpha=0.5)
 
     # # Quaternion plots
     # # mocap quaternion components
@@ -235,6 +211,6 @@ def plot_csv_time(
 plot_csv_time(
     "trajectories.csv",
     labels=("Desired (Mocap)", "Actual (Site)"),
-    title="Robot Trajectory Tracking Analysis with Quaternions",
+    title="Robot Trajectory Tracking Analysis",
     save="trajectory_analysis.png"
 )
