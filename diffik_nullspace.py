@@ -30,16 +30,26 @@ Kn = np.asarray([10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 5.0])
 # Maximum allowable joint velocity in rad/s.
 max_angvel = 3  # 0.785
 
-def log_trajectories(filename: str, mocap_traj: List[Tuple[float, float, float, float]], site_traj: List[Tuple[float, float, float, float]]) -> None:
+def log_trajectories(filename: str, mocap_traj: List[Tuple[float, float, float, float, float, float, float, float]], site_traj: List[Tuple[float, float, float, float, float, float, float, float]]) -> None:
     """
-    Log the trajectories of mocap and site positions to a CSV file.
-    Each row: [mocap_x, mocap_y, mocap_z, site_x, site_y, site_z]
+    Log the trajectories of mocap and site positions and quaternions to a CSV file.
+    Each row: [time, mocap_x, mocap_y, mocap_z, site_x, site_y, site_z,
+               mocap_quat_w, mocap_quat_x, mocap_quat_y, mocap_quat_z,
+               site_quat_w, site_quat_x, site_quat_y, site_quat_z]
     """
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["time", "mocap_x", "mocap_y", "mocap_z", "site_x", "site_y", "site_z"])
+        header = [
+            "time",
+            "mocap_x", "mocap_y", "mocap_z",
+            "site_x", "site_y", "site_z",
+            "mocap_quat_w", "mocap_quat_x", "mocap_quat_y", "mocap_quat_z",
+            "site_quat_w", "site_quat_x", "site_quat_y", "site_quat_z"
+        ]
+        writer.writerow(header)
         for mocap, site in zip(mocap_traj, site_traj):
             writer.writerow(list(mocap) + list(site))
+
 
 def pose(time):
     pos = (0.1 * np.cos(0.5 * np.pi * time) + 0.4,
@@ -52,7 +62,8 @@ def pose(time):
 
 
 def main() -> None:
-    assert mujoco.__version__ >= "3.1.0", "Please upgrade to mujoco 3.1.0 or later."
+    assert mujoco.__version__ >= "3.1.0", \
+        "Please upgrade to mujoco 3.1.0 or later."
 
     # Load the model and data.
     model = mujoco.MjModel.from_xml_path("franka_emika_panda/scene.xml")
@@ -66,8 +77,9 @@ def main() -> None:
     site_name = "attachment_site"
     site_id = model.site(site_name).id
 
-    # Get the dof and actuator ids for the joints we wish to control. These are copied
-    # from the XML file. Feel free to comment out some joints to see the effect on
+    # Get the dof and actuator ids for the joints we wish to control.
+    # These are copied from the XML file. Feel free to comment out some joints
+    # to see the effect on the control.
     # the controller.
     joint_names = [
         "joint1",
@@ -100,8 +112,10 @@ def main() -> None:
     error_quat = np.zeros(4)
 
     # Trajectory lists for logging
-    mocap_traj: List[Tuple[float, float, float, float]] = []
-    site_traj: List[Tuple[float, float, float, float]] = []
+    mocap_traj: List[Tuple[float, float, float, float,
+                            float, float, float, float]] = []
+    site_traj: List[Tuple[float, float, float, float,
+                          float, float, float, float]] = []
 
     with mujoco.viewer.launch_passive(
         model=model,
@@ -121,14 +135,17 @@ def main() -> None:
         while viewer.is_running() and data.time < 4.0:
             step_start = time.time()
 
-            data.mocap_pos[mocap_id, 0:3], data.mocap_quat[mocap_id] = pose(data.time)
+            mocap_pos, mocap_quat = pose(data.time)
+            data.mocap_pos[mocap_id, 0:3] = mocap_pos
+            data.mocap_quat[mocap_id] = mocap_quat
 
             # Spatial velocity (aka twist).
             dx = data.mocap_pos[mocap_id] - data.site(site_id).xpos
             twist[:3] = Kpos * dx / integration_dt
             mujoco.mju_mat2Quat(site_quat, data.site(site_id).xmat)
             mujoco.mju_negQuat(site_quat_conj, site_quat)
-            mujoco.mju_mulQuat(error_quat, data.mocap_quat[mocap_id], site_quat_conj)
+            mujoco.mju_mulQuat(error_quat, data.mocap_quat[mocap_id],
+                               site_quat_conj)
             mujoco.mju_quat2Vel(twist[3:], error_quat, 1.0)
             twist[3:] *= Kori / integration_dt
 
@@ -138,8 +155,9 @@ def main() -> None:
             # Damped least squares.
             dq = jac.T @ np.linalg.solve(jac @ jac.T + diag, twist)
 
-            # Nullspace control biasing joint velocities towards the home configuration.
-            dq += (eye - np.linalg.pinv(jac) @ jac) @ (Kn * (q0 - data.qpos[dof_ids]))
+    # Nullspace control biasing joint velocities towards the home configuration
+            dq += (eye - np.linalg.pinv(jac) @ jac) @ \
+                  (Kn * (q0 - data.qpos[dof_ids]))
 
             # Clamp maximum joint velocity.
             dq_abs_max = np.abs(dq).max()
@@ -155,11 +173,31 @@ def main() -> None:
             data.ctrl[actuator_ids] = q[dof_ids]
             mujoco.mj_step(model, data)
 
-            # Log mocap and site positions
+            # Log mocap and site positions and quaternions
             mocap_pos = data.mocap_pos[mocap_id, 0:3]
+            mocap_quat = data.mocap_quat[mocap_id]
             site_pos = data.site(site_id).xpos
-            mocap_traj.append((data.time, float(mocap_pos[0]), float(mocap_pos[1]), float(mocap_pos[2])))
-            site_traj.append((data.time, float(site_pos[0]), float(site_pos[1]), float(site_pos[2])))
+            
+            # Calculate site quaternion from rotation matrix
+            site_quat = np.zeros(4)
+            mujoco.mju_mat2Quat(site_quat, data.site(site_id).xmat)
+            
+            mocap_traj.append((data.time,
+                              float(mocap_pos[0]),
+                              float(mocap_pos[1]),
+                              float(mocap_pos[2]),
+                              float(mocap_quat[0]),
+                              float(mocap_quat[1]),
+                              float(mocap_quat[2]),
+                              float(mocap_quat[3])))
+            site_traj.append((data.time,
+                             float(site_pos[0]),
+                             float(site_pos[1]),
+                             float(site_pos[2]),
+                             float(site_quat[0]),
+                             float(site_quat[1]),
+                             float(site_quat[2]),
+                             float(site_quat[3])))
 
             viewer.sync()
             time_until_next_step = dt - (time.time() - step_start)
