@@ -26,7 +26,17 @@ dt: float = 0.002
 Kn = np.asarray([10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 5.0])
 
 # Maximum allowable joint velocity in rad/s.
-max_angvel = 0.785
+max_angvel = 3 # 0.785
+
+def pose(time):
+    time *= 0.5
+    pos = (0.1 * np.cos(2 * np.pi * 0.5 * time) + 0.4,
+           0.1 * np.sin(2 * np.pi * 0.5 * time) + 0.4,
+           0.3)
+    quat = np.array((1.0, np.sin(2 * time), np.sin(2 * time), 0))
+    quat /= np.linalg.norm(quat)
+
+    return pos, quat
 
 
 def main() -> None:
@@ -94,6 +104,8 @@ def main() -> None:
 
         while viewer.is_running():
             step_start = time.time()
+
+            data.mocap_pos[mocap_id, 0:3], data.mocap_quat[mocap_id] = pose(data.time)
 
             # Spatial velocity (aka twist).
             dx = data.mocap_pos[mocap_id] - data.site(site_id).xpos
