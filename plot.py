@@ -8,15 +8,15 @@ def plot_csv_time(
     *,
     has_header: bool = True,
     delimiter: str = ",",
-    time_col: int = 7,
-    mocap_x_col: int = 0,
-    mocap_y_col: int = 1,
-    mocap_z_col: int = 2,
-    site_x_col: int = 8,
-    site_y_col: int = 9,
-    site_z_col: int = 10,
-    mocap_quat_cols: tuple[int, int, int, int] = (3, 4, 5, 6),  # (w, x, y, z)
-    site_quat_cols: tuple[int, int, int, int] = (11, 12, 13, 14),
+    time_col: int = 0,
+    mocap_x_col: int = 1,
+    mocap_y_col: int = 2,
+    mocap_z_col: int = 3,
+    site_x_col: int = 9,
+    site_y_col: int = 10,
+    site_z_col: int = 11,
+    mocap_quat_cols: tuple[int, int, int, int] = (4, 5, 6, 7),  # (w, x, y, z)
+    site_quat_cols: tuple[int, int, int, int] = (12, 13, 14, 15),
     # (w, x, y, z)
     time_unit: str | None = None,
     title: str | None = None,
@@ -53,7 +53,6 @@ def plot_csv_time(
 
     # Select columns by index
     t_raw = df['time']  # Use column name to avoid indexing issues
-    t_new = pd.to_numeric(df.iloc[:, time_col], errors="coerce")
     mocap_x = pd.to_numeric(df.iloc[:, mocap_x_col], errors="coerce")
     mocap_y = pd.to_numeric(df.iloc[:, mocap_y_col], errors="coerce")
     mocap_z = pd.to_numeric(df.iloc[:, mocap_z_col], errors="coerce")
@@ -120,8 +119,8 @@ def plot_csv_time(
     
     # Position plots
     # mocap x(t)
-    axes[0].plot(t_new, mocap_x, label=labels[0], color='blue')
-    axes[0].plot(t_new, site_x, label=labels[1], color='red')
+    axes[0].plot(t, mocap_x, label=labels[0], color='blue')
+    axes[0].plot(t, site_x, label=labels[1], color='red')
     axes[0].set_ylabel("x [m]")
     axes[0].legend()
     axes[0].grid(True, linestyle="--", alpha=0.5)
@@ -133,8 +132,8 @@ def plot_csv_time(
     # axes[0, 1].grid(True, linestyle="--", alpha=0.5)
 
     # mocap y(t)
-    axes[1].plot(t_new, mocap_y, label=labels[0], color='blue')
-    axes[1].plot(t_new, site_y, label=labels[1], color='red')
+    axes[1].plot(t, mocap_y, label=labels[0], color='blue')
+    axes[1].plot(t, site_y, label=labels[1], color='red')
     axes[1].set_ylabel("y [m]")
     axes[1].legend()
     axes[1].grid(True, linestyle="--", alpha=0.5)
@@ -146,8 +145,8 @@ def plot_csv_time(
     # axes[1, 1].grid(True, linestyle="--", alpha=0.5)
 
     # mocap z(t)
-    axes[2].plot(t_new, mocap_z, label=labels[0], color='blue')
-    axes[2].plot(t_new, site_z, label=labels[1], color='red')
+    axes[2].plot(t, mocap_z, label=labels[0], color='blue')
+    axes[2].plot(t, site_z, label=labels[1], color='red')
     axes[2].set_xlabel("Time [s]")
     axes[2].set_ylabel("z [m]")
     axes[2].legend()

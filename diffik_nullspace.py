@@ -42,8 +42,9 @@ def log_trajectories(filename: str, mocap_traj: List[Tuple[float, float, float, 
         header = [
             "time",
             "mocap_x", "mocap_y", "mocap_z",
-            "site_x", "site_y", "site_z",
             "mocap_quat_w", "mocap_quat_x", "mocap_quat_y", "mocap_quat_z",
+            "time",
+            "site_x", "site_y", "site_z",
             "site_quat_w", "site_quat_x", "site_quat_y", "site_quat_z"
         ]
         writer.writerow(header)
