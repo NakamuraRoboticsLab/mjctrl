@@ -12,24 +12,18 @@ def plot_csv_time(
     mocap_x_col: int = 1,
     mocap_y_col: int = 2,
     mocap_z_col: int = 3,
-    site_x_col: int = 9,
-    site_y_col: int = 10,
-    site_z_col: int = 11,
+    site_x_col: int = 18,
+    site_y_col: int = 19,
+    site_z_col: int = 20,
     mocap_quat_cols: tuple[int, int, int, int] = (4, 5, 6, 7),  # (w, x, y, z)
-    site_quat_cols: tuple[int, int, int, int] = (12, 13, 14, 15),
-    # (w, x, y, z)
+    site_quat_cols: tuple[int, int, int, int] = (21, 22, 23, 24),  # (w, x, y, z)
+    mocap_rot_cols: tuple[int, int, int, int, int, int, int, int, int] = (8, 9, 10, 11, 12, 13, 14, 15, 16),  # 3x3 matrix
+    site_rot_cols: tuple[int, int, int, int, int, int, int, int, int] = (25, 26, 27, 28, 29, 30, 31, 32, 33),  # 3x3 matrix
     time_unit: str | None = None,
     title: str | None = None,
     save: str | None = None,
     labels: tuple[str, str] = ("Desired (Mocap)", "Actual (Site)")
 ) -> None:
-    """
-    Plot trajectories from CSV file matching the log_trajectories format.
-    CSV layout: [time, mocap_x, mocap_y, mocap_z, site_x, site_y, site_z,
-                 mocap_quat_w, mocap_quat_x, mocap_quat_y, mocap_quat_z,
-                 site_quat_w, site_quat_x, site_quat_y, site_quat_z]
-    Plots position trajectories and quaternion components over time.
-    """
     print(f"Reading CSV file: {path}")
     header = 0 if has_header else None
     
@@ -47,8 +41,8 @@ def plot_csv_time(
         return
 
     # Debug column access
-    print(f"time_col={time_col}, df.iloc[:, {time_col}] first few values:")
-    print(df.iloc[:5, time_col])
+    print(f"time_col={time_col}, but using df['time'] for t_raw")
+    print(f"df['time'] first few values: {df['time'].head()}")
     print(f"Column name at index {time_col}: '{df.columns[time_col]}'")
 
     # Select columns by index
@@ -79,10 +73,22 @@ def plot_csv_time(
     site_quat_z = pd.to_numeric(df.iloc[:, site_quat_cols[3]],
                                 errors="coerce")
 
+    # Extract rotation matrix data
+    mocap_rot = []
+    site_rot = []
+    for i in range(9):
+        mocap_rot.append(pd.to_numeric(df.iloc[:, mocap_rot_cols[i]],
+                                       errors="coerce"))
+        site_rot.append(pd.to_numeric(df.iloc[:, site_rot_cols[i]],
+                                      errors="coerce"))
+
     # Parse time
     is_datetime = False
     print(f"t_raw type: {type(t_raw.iloc[0])}, "
           f"first few: {t_raw.head()}")
+    print(f"t_raw values look like time? First few: {t_raw.head().values}")
+    print(f"Are t_raw values monotonically increasing? "
+          f"{t_raw.is_monotonic_increasing}")
     
     if time_unit == "datetime":
         t = pd.to_datetime(t_raw, errors="coerce")
@@ -118,82 +124,30 @@ def plot_csv_time(
     fig, axes = plt.subplots(3, figsize=(8, 12), constrained_layout=True)
     
     # Position plots
-    # mocap x(t)
+    # mocap x(t) and site x(t) in same plot
     axes[0].plot(t, mocap_x, label=labels[0], color='blue')
     axes[0].plot(t, site_x, label=labels[1], color='red')
     axes[0].set_ylabel("x [m]")
     axes[0].legend()
     axes[0].grid(True, linestyle="--", alpha=0.5)
+    axes[0].set_title("X Position Tracking")
 
-    # # site x(t)
-    # axes[0, 1].plot(t, site_x, label=labels[1], color='red')
-    # axes[0, 1].set_ylabel("site_x")
-    # axes[0, 1].legend()
-    # axes[0, 1].grid(True, linestyle="--", alpha=0.5)
-
-    # mocap y(t)
+    # mocap y(t) and site y(t) in same plot
     axes[1].plot(t, mocap_y, label=labels[0], color='blue')
     axes[1].plot(t, site_y, label=labels[1], color='red')
     axes[1].set_ylabel("y [m]")
     axes[1].legend()
     axes[1].grid(True, linestyle="--", alpha=0.5)
+    axes[1].set_title("Y Position Tracking")
 
-    # # site y(t)
-    # axes[1, 1].plot(t, site_y, label=labels[1], color='red')
-    # axes[1, 1].set_ylabel("site_y")
-    # axes[1, 1].legend()
-    # axes[1, 1].grid(True, linestyle="--", alpha=0.5)
-
-    # mocap z(t)
+    # mocap z(t) and site z(t) in same plot
     axes[2].plot(t, mocap_z, label=labels[0], color='blue')
     axes[2].plot(t, site_z, label=labels[1], color='red')
     axes[2].set_xlabel("Time [s]")
     axes[2].set_ylabel("z [m]")
     axes[2].legend()
     axes[2].grid(True, linestyle="--", alpha=0.5)
-
-    # # Quaternion plots
-    # # mocap quaternion components
-    # axes[2, 0].plot(t, mocap_quat_w, label=f"{labels[0]} w", color='blue', linestyle='-')
-    # axes[2, 0].plot(t, mocap_quat_x, label=f"{labels[0]} x", color='blue', linestyle='--')
-    # axes[2, 0].plot(t, mocap_quat_y, label=f"{labels[0]} y", color='blue', linestyle='-.')
-    # axes[2, 0].plot(t, mocap_quat_z, label=f"{labels[0]} z", color='blue', linestyle=':')
-    # axes[2, 0].set_ylabel("mocap_quat")
-    # axes[2, 0].legend()
-    # axes[2, 0].grid(True, linestyle="--", alpha=0.5)
-
-    # # site quaternion components
-    # axes[2, 1].plot(t, site_quat_w, label=f"{labels[1]} w", color='red', linestyle='-')
-    # axes[2, 1].plot(t, site_quat_x, label=f"{labels[1]} x", color='red', linestyle='--')
-    # axes[2, 1].plot(t, site_quat_y, label=f"{labels[1]} y", color='red', linestyle='-.')
-    # axes[2, 1].plot(t, site_quat_z, label=f"{labels[1]} z", color='red', linestyle=':')
-    # axes[2, 1].set_ylabel("site_quat")
-    # axes[2, 1].legend()
-    # axes[2, 1].grid(True, linestyle="--", alpha=0.5)
-
-    # # Trajectory plots
-    # # mocap y vs x
-    # axes[3, 0].plot(mocap_x, mocap_y, label=labels[0], color='blue')
-    # axes[3, 0].set_xlabel("mocap_x")
-    # axes[3, 0].set_ylabel("mocap_y")
-    # axes[3, 0].set_aspect("equal", adjustable="box")
-    # axes[3, 0].grid(True, linestyle="--", alpha=0.5)
-
-    # # site y vs x
-    # axes[3, 1].plot(site_x, site_y, label=labels[1], color='red')
-    # axes[3, 1].set_xlabel("site_x")
-    # axes[3, 1].set_ylabel("site_y")
-    # axes[3, 1].set_aspect("equal", adjustable="box")
-    # axes[3, 1].grid(True, linestyle="--", alpha=0.5)
-
-    # Format time axis if datetime
-    if is_datetime:
-        locator = AutoDateLocator()
-        formatter = DateFormatter("%Y-%m-%d %H:%M:%S")
-        for ax in (axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1], axes[2, 0], axes[2, 1]):
-            ax.xaxis.set_major_locator(locator)
-            ax.xaxis.set_major_formatter(formatter)
-        fig.autofmt_xdate()
+    axes[2].set_title("Z Position Tracking")
 
     if title:
         fig.suptitle(title)

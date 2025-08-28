@@ -4,17 +4,21 @@ import numpy as np
 import time
 import csv
 from typing import List, Tuple
+from scipy.spatial.transform import Rotation as R
 
-# Integration timestep in seconds. This corresponds to the amount of time the joint
-# velocities will be integrated for to obtain the desired joint positions.
+# Integration timestep in seconds. This corresponds to the amount
+# of time the joint velocities will be integrated for to obtain the
+# desired joint positions.
 integration_dt: float = 0.1
 
-# Damping term for the pseudoinverse. This is used to prevent joint velocities from
-# becoming too large when the Jacobian is close to singular.
+# Damping term for the pseudoinverse. This is used to prevent joint
+# velocities from becoming too large when the Jacobian is close to
+# singular.
 damping: float = 1e-4
 
-# Gains for the twist computation. These should be between 0 and 1. 0 means no
-# movement, 1 means move the end-effector to the target in one integration step.
+# Gains for the twist computation. These should be between 0 and 1.
+# 0 means no movement, 1 means move the end-effector to the target
+# in one integration step.
 Kpos: float = 0.95
 Kori: float = 0.95
 
@@ -30,12 +34,13 @@ Kn = np.asarray([10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 5.0])
 # Maximum allowable joint velocity in rad/s.
 max_angvel = 3  # 0.785
 
-def log_trajectories(filename: str, mocap_traj: List[Tuple[float, float, float, float, float, float, float, float]], site_traj: List[Tuple[float, float, float, float, float, float, float, float]]) -> None:
+
+def log_trajectories(filename: str,
+                     mocap_traj: List[Tuple[float, ...]],
+                     site_traj: List[Tuple[float, ...]]) -> None:
     """
-    Log the trajectories of mocap and site positions and quaternions to a CSV file.
-    Each row: [time, mocap_x, mocap_y, mocap_z, site_x, site_y, site_z,
-               mocap_quat_w, mocap_quat_x, mocap_quat_y, mocap_quat_z,
-               site_quat_w, site_quat_x, site_quat_y, site_quat_z]
+    Log the trajectories of mocap and site positions, quaternions,
+    and rotation matrices to a CSV file.
     """
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -43,9 +48,14 @@ def log_trajectories(filename: str, mocap_traj: List[Tuple[float, float, float, 
             "time",
             "mocap_x", "mocap_y", "mocap_z",
             "mocap_quat_w", "mocap_quat_x", "mocap_quat_y", "mocap_quat_z",
-            "time",
+            "mocap_rot_00", "mocap_rot_01", "mocap_rot_02",
+            "mocap_rot_10", "mocap_rot_11", "mocap_rot_12",
+            "mocap_rot_20", "mocap_rot_21", "mocap_rot_22",
             "site_x", "site_y", "site_z",
-            "site_quat_w", "site_quat_x", "site_quat_y", "site_quat_z"
+            "site_quat_w", "site_quat_x", "site_quat_y", "site_quat_z",
+            "site_rot_00", "site_rot_01", "site_rot_02",
+            "site_rot_10", "site_rot_11", "site_rot_12",
+            "site_rot_20", "site_rot_21", "site_rot_22"
         ]
         writer.writerow(header)
         for mocap, site in zip(mocap_traj, site_traj):
@@ -113,10 +123,8 @@ def main() -> None:
     error_quat = np.zeros(4)
 
     # Trajectory lists for logging
-    mocap_traj: List[Tuple[float, float, float, float,
-                            float, float, float, float]] = []
-    site_traj: List[Tuple[float, float, float, float,
-                          float, float, float, float]] = []
+    mocap_traj: List[Tuple[float, ...]] = []
+    site_traj: List[Tuple[float, ...]] = []
 
     with mujoco.viewer.launch_passive(
         model=model,
@@ -174,15 +182,23 @@ def main() -> None:
             data.ctrl[actuator_ids] = q[dof_ids]
             mujoco.mj_step(model, data)
 
-            # Log mocap and site positions and quaternions
+            # Log mocap and site positions, quaternions, and rotation matrices
             mocap_pos = data.mocap_pos[mocap_id, 0:3]
             mocap_quat = data.mocap_quat[mocap_id]
             site_pos = data.site(site_id).xpos
-            
-            # Calculate site quaternion from rotation matrix
+
+            # Calculate site quaternion and rotation matrix
+            # from rotation matrix
             site_quat = np.zeros(4)
             mujoco.mju_mat2Quat(site_quat, data.site(site_id).xmat)
-            
+            site_rotmat = data.site(site_id).xmat.reshape(9)
+            # Flatten 3x3 matrix
+
+            # Convert mocap quaternion to rotation matrix
+            mocap_rot = R.from_quat(mocap_quat).as_matrix()
+            mocap_rotmat = mocap_rot.flatten()
+            # Flatten 3x3 matrix
+
             mocap_traj.append((data.time,
                               float(mocap_pos[0]),
                               float(mocap_pos[1]),
@@ -190,7 +206,12 @@ def main() -> None:
                               float(mocap_quat[0]),
                               float(mocap_quat[1]),
                               float(mocap_quat[2]),
-                              float(mocap_quat[3])))
+                              float(mocap_quat[3]),
+                              float(mocap_rotmat[0]), float(mocap_rotmat[1]),
+                              float(mocap_rotmat[2]), float(mocap_rotmat[3]),
+                              float(mocap_rotmat[4]), float(mocap_rotmat[5]),
+                              float(mocap_rotmat[6]), float(mocap_rotmat[7]),
+                              float(mocap_rotmat[8])))
             site_traj.append((data.time,
                              float(site_pos[0]),
                              float(site_pos[1]),
@@ -198,7 +219,12 @@ def main() -> None:
                              float(site_quat[0]),
                              float(site_quat[1]),
                              float(site_quat[2]),
-                             float(site_quat[3])))
+                             float(site_quat[3]),
+                             float(site_rotmat[0]), float(site_rotmat[1]),
+                             float(site_rotmat[2]), float(site_rotmat[3]),
+                             float(site_rotmat[4]), float(site_rotmat[5]),
+                             float(site_rotmat[6]), float(site_rotmat[7]),
+                             float(site_rotmat[8])))
 
             viewer.sync()
             time_until_next_step = dt - (time.time() - step_start)
