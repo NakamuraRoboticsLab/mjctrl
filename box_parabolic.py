@@ -1,3 +1,4 @@
+from xml.parsers.expat import model
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -82,8 +83,29 @@ def main() -> None:
         # Reset the simulation.
         mujoco.mj_resetDataKeyframe(model, data, 0)
 
+        # Set initial velocity of the free body "box"
+        box_bid = model.body("box").id
+        jadr = model.body_jntadr[box_bid]
+        assert model.jnt_type[jadr] == mujoco.mjtJoint.mjJNT_FREE
+        dofadr = model.jnt_dofadr[jadr]
+
+        # Angular velocity [wx, wy, wz] in rad/s, then linear velocity [vx, vy, vz] in m/s
+        lin_vel = np.array([1.0, 1.0, 3.0])   # e.g., spin around z: [0, 0, 5.0]
+        ang_vel = np.array([1.0, 2.0, 1.0])   # e.g., forward + upward throw
+
+        data.qvel[dofadr : dofadr + 3] = lin_vel
+        data.qvel[dofadr + 3 : dofadr + 6] = ang_vel
+
+        # Recompute derived quantities
+        mujoco.mj_forward(model, data)
+
         # Reset the free camera.
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
+        # Free camera: set where to look, how far, and angles (degrees)
+        viewer.cam.lookat[:] = [0.0, 0.0, 0.5]   # target point (x,y,z)
+        viewer.cam.distance = 2.5                 # zoom distance
+        viewer.cam.azimuth = 135                  # yaw
+        viewer.cam.elevation = -20                # pitch
 
         # Enable body frame visualization.
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_BODY
