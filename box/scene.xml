@@ -1,0 +1,39 @@
+<mujoco model="Box Gravity Scene">
+  <compiler autolimits="true"/>
+
+  <option gravity="0 0 -9.81" timestep="0.002"/>
+
+  <size memory="1M"/>
+
+  <visual>
+    <global azimuth="135" elevation="-20"/>
+    <headlight ambient="0.4 0.4 0.4" diffuse="0.8 0.8 0.8" specular="0.1 0.1 0.1"/>
+  </visual>
+
+  <statistic meansize="0.1" extent="1.0"/>
+
+  <default>
+    <geom solref="0.02 1" solimp="0.9 0.95 0.001"/>
+  </default>
+
+  <worldbody>
+    <!-- Ground plane -->
+    <geom name="ground" type="plane" size="2 2 0.1" rgba="0.8 0.8 0.8 1"
+          pos="0 0 -0.1"/>
+
+    <!-- Simple box that will fall under gravity -->
+    <body name="box" pos="0 0 1.0">
+      <freejoint/>
+      <geom name="box_geom" type="box" size="0.1 0.1 0.1" rgba="0.2 0.8 0.2 1"
+            mass="1.0"/>
+      <site name="box_center" pos="0 0 0" size="0.01"/>
+    </body>
+
+    <!-- Light source -->
+    <light pos="0 0 2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+  </worldbody>
+
+  <actuator>
+    <!-- No actuators needed for free-falling box -->
+  </actuator>
+</mujoco>
