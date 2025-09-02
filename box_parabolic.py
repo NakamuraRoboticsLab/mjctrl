@@ -103,14 +103,14 @@ def main() -> None:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
         # Free camera: set where to look, how far, and angles (degrees)
         viewer.cam.lookat[:] = [0.0, 0.0, 0.5]   # target point (x,y,z)
-        viewer.cam.distance = 2.5                 # zoom distance
+        viewer.cam.distance = 3.0                 # zoom distance
         viewer.cam.azimuth = 135                  # yaw
         viewer.cam.elevation = -20                # pitch
 
         # Enable body frame visualization.
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_BODY
 
-        while viewer.is_running() and data.time < 6.0:
+        while viewer.is_running() and data.time < 5.0:
             step_start = time.time()
 
             # Generate parabolic trajectory (for reference/logging only)
