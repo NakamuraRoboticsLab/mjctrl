@@ -103,7 +103,7 @@ def main() -> None:
         # Enable body frame visualization.
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_BODY
 
-        while viewer.is_running() and data.time < 5.0:
+        while viewer.is_running() and data.time < 3.0:
             step_start = time.time()
 
             # Step the simulation (box falls naturally under gravity)
