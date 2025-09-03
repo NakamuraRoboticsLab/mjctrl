@@ -24,10 +24,10 @@
     <!-- Simple box that will fall under gravity -->
     <body name="box" pos="0 0 1.0" quat="1 0 0 0">
       <freejoint/>
-      <!-- <inertial pos="0.000489 0.002797 1.020484"
-          quat="0.999989 -0.00130808 -0.00282289 -0.00349105" mass="17.789"
-          diaginertia="0.487315 0.409628 0.127837" /> -->
-      <geom name="box_geom" type="box" pos="0 0 0" size="0.1 0.2 0.3" rgba="0.2 0.8 0.2 1"/>
+      <inertial pos="0.0 0.0 1.0"
+        mass="15"
+        fullinertia="0.487300 0.409630 0.127850 -0.000536 0.002029 -0.001415" />
+  <geom name="box_geom" type="box" size="0.1 0.2 0.1" rgba="0.2 0.8 0.2 1"/>
       <site name="box_center" pos="0 0 0" size="0.01"/>
     </body>
 
