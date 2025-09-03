@@ -83,8 +83,8 @@ def main() -> None:
         dofadr = model.jnt_dofadr[jadr]
 
         # Angular velocity [wx, wy, wz] in rad/s, then linear velocity [vx, vy, vz] in m/s
-        lin_vel = np.array([1.0, 1.0, 3.0])   # e.g., spin around z: [0, 0, 5.0]
-        ang_vel = np.array([1.0, 2.0, 1.0])   # e.g., forward + upward throw
+        lin_vel = np.array([0.0, 0.0, 0.0])   # e.g., spin around z: [0, 0, 5.0]
+        ang_vel = np.array([0.0, 0.0, 0.0])   # e.g., forward + upward throw
 
         data.qvel[dofadr : dofadr + 3] = lin_vel
         data.qvel[dofadr + 3 : dofadr + 6] = ang_vel
