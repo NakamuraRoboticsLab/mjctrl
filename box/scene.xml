@@ -27,7 +27,7 @@
       <inertial pos="0.0 0.0 1.0"
         mass="15"
         fullinertia="0.487300 0.409630 0.127850 -0.000536 0.002029 -0.001415" />
-  <geom name="box_geom" type="box" size="0.1 0.2 0.1" rgba="0.2 0.8 0.2 1"/>
+      <geom name="box_geom" type="box" size="0.1 0.2 0.1" rgba="0.2 0.8 0.2 1"/>
       <site name="box_center" pos="0 0 0" size="0.01"/>
     </body>
 
