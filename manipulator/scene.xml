@@ -67,11 +67,11 @@
   </worldbody>
 
   <actuator>
-    <motor name="m1" joint="j1_yaw"  gear="100" ctrlrange="-2 2"/>
-    <motor name="m2" joint="j2_pitch" gear="100" ctrlrange="-2 2"/>
-    <motor name="m3" joint="j3_pitch" gear="100" ctrlrange="-2 2"/>
-    <motor name="m4" joint="j4_pitch" gear="100" ctrlrange="-2 2"/>
-    <motor name="m5" joint="j5_yaw"  gear="100" ctrlrange="-2 2"/>
-    <motor name="m6" joint="j6_roll" gear="100" ctrlrange="-2 2"/>
+    <motor name="m1" joint="j1_yaw"  gear="10" ctrlrange="-2 2"/>
+    <motor name="m2" joint="j2_pitch" gear="10" ctrlrange="-2 2"/>
+    <motor name="m3" joint="j3_pitch" gear="10" ctrlrange="-2 2"/>
+    <motor name="m4" joint="j4_pitch" gear="10" ctrlrange="-2 2"/>
+    <motor name="m5" joint="j5_yaw"  gear="10" ctrlrange="-2 2"/>
+    <motor name="m6" joint="j6_roll" gear="10" ctrlrange="-2 2"/>
   </actuator>
 </mujoco>
