@@ -23,7 +23,7 @@ RELATIVE_TO_INITIAL = False  # False: absolute targets; True: offsets from q0
 
 # Joint-space PD gains (element-wise)
 KP = np.array([800, 800, 800, 800, 800, 800], dtype=float)
-KD = np.array([80, 80, 80, 80, 80, 80], dtype=float)
+KD = np.array([50, 50, 50, 50, 50, 50], dtype=float)
 
 # Torque saturation fraction of actuator ctrlrange
 SAT_FRACTION = 0.95
@@ -68,6 +68,8 @@ def run():
         q0 = data.qpos[dof_indices].copy()
         q_des_const, qd_des_const = build_constant_target(q0)
 
+        tau = np.zeros_like(q0)
+
         while viewer.is_running() and data.time < T_END:
             step_start = time.time()
 
@@ -78,8 +80,6 @@ def run():
             qd = data.qvel[dof_indices]
 
             # PD torque
-            tau = KP * (q_des - q) + KD * (qd_des - qd)
-            print(tau)
 
             # Direct torque assignment (no saturation)
             for ai, joint_dof in zip(actuator_ids, dof_indices):
