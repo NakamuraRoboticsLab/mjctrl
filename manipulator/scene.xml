@@ -1,12 +1,12 @@
 <mujoco model="sixdof_cyl_arm">
   <!-- Use degrees for readability -->
   <compiler angle="degree" coordinate="local"/>
-  <option timestep="0.002" gravity="0 0 -9.81"/>
+  <option timestep="0.002" gravity="0 0 0"/>
 
   <default>
-    <joint type="hinge" damping="0.1" armature="0.001" limited="true" range="-180 180"/>
+    <joint type="hinge" damping="0.0" armature="0.0" limited="false" range="-180 180"/>
     <!-- Cylinder axis is local Z in MuJoCo; we rotate geoms so they lie along +X (link direction) -->
-    <geom type="cylinder" rgba="0.6 0.6 0.65 1" density="1000" friction="0.8 0.1 0.01"/>
+    <geom type="cylinder" rgba="0.6 0.6 0.65 1" density="1000" friction="0.0 0.0 0.0"/>
     <motor gear="1"/>
   </default>
 
@@ -67,11 +67,11 @@
   </worldbody>
 
   <actuator>
-    <motor name="m1" joint="j1_yaw"  gear="10" ctrlrange="-2 2"/>
-    <motor name="m2" joint="j2_pitch" gear="10" ctrlrange="-2 2"/>
-    <motor name="m3" joint="j3_pitch" gear="10" ctrlrange="-2 2"/>
-    <motor name="m4" joint="j4_pitch" gear="10" ctrlrange="-2 2"/>
-    <motor name="m5" joint="j5_yaw"  gear="10" ctrlrange="-2 2"/>
-    <motor name="m6" joint="j6_roll" gear="10" ctrlrange="-2 2"/>
+    <motor name="m1" joint="j1_yaw"  gear="1" ctrlrange="-1000 1000"/>
+    <motor name="m2" joint="j2_pitch" gear="1" ctrlrange="-1000 1000"/>
+    <motor name="m3" joint="j3_pitch" gear="1" ctrlrange="-1000 1000"/>
+    <motor name="m4" joint="j4_pitch" gear="1" ctrlrange="-1000 1000"/>
+    <motor name="m5" joint="j5_yaw"  gear="1" ctrlrange="-1000 1000"/>
+    <motor name="m6" joint="j6_roll" gear="1" ctrlrange="-1000 1000"/>
   </actuator>
 </mujoco>

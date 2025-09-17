@@ -13,7 +13,7 @@ Results are logged to CSV for analysis.
 """
 
 DT_SIM = 0.002        # Matches XML timestep
-T_END = 10.0          # Total simulation time [s]
+T_END = 15.0          # Total simulation time [s]
 
 # Constant desired posture configuration
 # Provide target joint angles in degrees (readable). Set RELATIVE_TO_INITIAL
@@ -22,11 +22,11 @@ JOINT_TARGET_DEG = np.array([50, -70, -20, 50, 60, 5], dtype=float)
 RELATIVE_TO_INITIAL = False  # False: absolute targets; True: offsets from q0
 
 # Joint-space PD gains (element-wise)
-KP = np.array([800, 800, 800, 800, 800, 800], dtype=float)
-KD = np.array([50, 50, 50, 50, 50, 50], dtype=float)
+KP = np.array([200, 200, 200, 200, 50, 5], dtype=float)
+KD = np.array([5, 5, 5, 5, 5, 0.1], dtype=float)
 
 # Torque saturation fraction of actuator ctrlrange
-SAT_FRACTION = 0.95
+SAT_FRACTION = 1
 
 JOINT_ORDER = [
     "j1_yaw", "j2_pitch", "j3_pitch",
@@ -80,6 +80,12 @@ def run():
             qd = data.qvel[dof_indices]
 
             # PD torque
+            tau = KP * (q_des - q) + KD * (qd_des - qd)
+
+            # print("3 angle, velocity, torque:", q[2], qd[2], tau[2])
+            # print("4 angle, velocity, torque:", q[3], qd[3], tau[3])
+            # print("5 angle, velocity, torque:", q[4], qd[4], tau[4])
+            # print("6 angle, velocity, torque:", q[5], qd[5], tau[5])
 
             # Direct torque assignment (no saturation)
             for ai, joint_dof in zip(actuator_ids, dof_indices):
