@@ -13,7 +13,7 @@ Results are logged to CSV for analysis.
 """
 
 DT_SIM = 0.002        # Matches XML timestep
-T_END = 30.0          # Total simulation time [s]
+T_END = 20.0          # Total simulation time [s]
 
 # Constant desired posture configuration
 # Provide target joint angles in degrees (readable). Set RELATIVE_TO_INITIAL
@@ -60,11 +60,20 @@ def run():
 
     rows: List[List[float]] = []
 
-    with mujoco.viewer.launch_passive(model=model, data=data,
-                                      show_left_ui=False,
-                                      show_right_ui=False) as viewer:
+    with mujoco.viewer.launch_passive(
+        model=model,
+        data=data,
+        show_left_ui=False,
+        show_right_ui=False,
+    ) as viewer:
         mujoco.mj_resetData(model, data)
         mujoco.mj_forward(model, data)
+
+        # Draw body frames (X=red, Y=green, Z=blue) and scale them up
+        model.vis.scale.framelength = 0.6
+        model.vis.scale.framewidth = 0.02
+        viewer.opt.frame = mujoco.mjtFrame.mjFRAME_BODY
+
         q0 = data.qpos[dof_indices].copy()
         q_des_const, qd_des_const = build_constant_target(q0)
 
@@ -91,7 +100,7 @@ def run():
             for ai, joint_dof in zip(actuator_ids, dof_indices):
                 data.ctrl[ai] = float(tau[dof_indices == joint_dof][0])
 
-            # Log (time, q_des[6], q[6], qd_des[6], qd[6])
+            # Log
             rows.append([
                 data.time,
                 *q_des.tolist(),
@@ -115,7 +124,7 @@ def run():
         *(f"qd_des_{i+1}" for i in range(6)),
         *(f"qd_{i+1}" for i in range(6)),
     ]
-    out = "manipulator_joint_pd_trajectories.csv"
+    out = "manipulator_box_joint_pd_trajectories.csv"
     with open(out, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(header)
