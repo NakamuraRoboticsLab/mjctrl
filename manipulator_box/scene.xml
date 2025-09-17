@@ -1,0 +1,77 @@
+<mujoco model="sixdof_cyl_arm">
+  <!-- Use degrees for readability -->
+  <compiler angle="degree" coordinate="local"/>
+  <option timestep="0.002" gravity="0 0 0"/>
+
+  <default>
+    <joint type="hinge" damping="0.0" armature="0.0" limited="false" range="-180 180"/>
+    <!-- Cylinder axis is local Z in MuJoCo; we rotate geoms so they lie along +X (link direction) -->
+    <geom type="box" rgba="0.6 0.6 0.65 1" density="1000" friction="0.0 0.0 0.0"/>
+    <motor gear="1"/>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1="0.2 0.25 0.3" rgb2="0.22 0.27 0.33"/>
+    <material name="mat_floor" texture="grid" texrepeat="4 4" reflectance="0.1"/>
+  </asset>
+
+  <worldbody>
+    <!-- Floor -->
+    <geom name="floor" type="plane" size="5 5 0.1" material="mat_floor" rgba="1 1 1 1"/>
+    <!-- Base of the manipulator -->
+    <body name="base" pos="0 0 0.2">
+      <!-- Optional visual for the base -->
+      <geom type="box" size="0.1 0.1 0.05" rgba="0.4 0.4 0.45 1"/>
+
+      <!-- Link 1 (yaw about Z) -->
+      <body name="link1" pos="0 0 0">
+        <joint name="j1_yaw" axis="0 0 1" range="-180 180"/>
+        <!-- Box along +X: rotate 90° about Y. Half-length = 0.15 -->
+        <geom name="g1" size="0.05 0.06 0.15" euler="0 90 0" pos="0.15 0 0"/>
+
+        <!-- Link 2 (pitch about Y) at end of link1 -->
+        <body name="link2" pos="0.30 0 0">
+          <joint name="j2_pitch" axis="0 1 0" range="-180 180"/>
+          <geom name="g2" size="0.04 0.05 0.15" euler="0 90 0" pos="0.15 0 0"/>
+
+          <!-- Link 3 (pitch about Y); half-length = 0.125 -->
+          <body name="link3" pos="0.30 0 0">
+            <joint name="j3_pitch" axis="0 0 1" range="-180 180"/>
+            <geom name="g3" size="0.03 0.04 0.125" euler="0 90 0" pos="0.125 0 0"/>
+
+            <!-- Link 4 (pitch about Y); half-length = 0.10 -->
+            <body name="link4" pos="0.25 0 0">
+              <joint name="j4_pitch" axis="0 1 0" range="-180 180"/>
+              <geom name="g4" size="0.04 0.05 0.10" euler="0 90 0" pos="0.10 0 0"/>
+
+              <!-- Link 5 (yaw about Z); half-length = 0.075 -->
+              <body name="link5" pos="0.20 0 0">
+                <joint name="j5_yaw" axis="0 0 1" range="-180 180"/>
+                <geom name="g5" size="0.04 0.03 0.075" euler="0 90 0" pos="0.075 0 0"/>
+
+                <!-- Link 6 (roll about X); half-length = 0.05 -->
+                <body name="link6" pos="0.15 0 0">
+                  <joint name="j6_roll" axis="1 0 0" range="-180 180"/>
+                  <geom name="g6" size="0.05 0.06 0.05" euler="0 90 0" pos="0.05 0 0"/>
+
+                  <!-- End-effector site at the tip of link 6 -->
+                  <site name="ee" pos="0.10 0 0" size="0.01" rgba="0.9 0.3 0.3 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <light pos="0 0 2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+  </worldbody>
+
+  <actuator>
+    <motor name="m1" joint="j1_yaw"  gear="1" ctrlrange="-5000 5000"/>
+    <motor name="m2" joint="j2_pitch" gear="1" ctrlrange="-5000 5000"/>
+    <motor name="m3" joint="j3_pitch" gear="1" ctrlrange="-5000 5000"/>
+    <motor name="m4" joint="j4_pitch" gear="1" ctrlrange="-5000 5000"/>
+    <motor name="m5" joint="j5_yaw"  gear="1" ctrlrange="-5000 5000"/>
+    <motor name="m6" joint="j6_roll" gear="1" ctrlrange="-5000 5000"/>
+  </actuator>
+</mujoco>
