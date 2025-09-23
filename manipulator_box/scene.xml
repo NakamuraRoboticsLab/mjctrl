@@ -1,7 +1,7 @@
 <mujoco model="sixdof_cyl_arm">
   <!-- Use degrees for readability -->
   <compiler angle="degree" coordinate="local"/>
-  <option timestep="0.002" gravity="0 0 -9.81"/>
+  <option timestep="0.002" gravity="0 0 0"/>
 
   <default>
     <joint type="hinge" damping="0.0" armature="0.0" limited="false" range="-180 180"/>

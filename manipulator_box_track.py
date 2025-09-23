@@ -18,7 +18,7 @@ We also log desired (as mocap_*) and actual site pose to CSV.
 
 # Simulation and IK integration settings
 DT_SIM: float = 0.002         # Must match XML timestep
-T_END: float = 10.0           # Total simulation time [s]
+T_END: float = 15.0           # Total simulation time [s]
 integration_dt: float = 0.1   # IK integration horizon [s]
 damping: float = 1e-4         # DLS damping (lambda)
 Kpos: float = 0.95            # Task-space position gain in [0, 1]
@@ -29,11 +29,11 @@ PRINT_PERIOD: float = 0.05    # Console print period [s]
 Kn = np.asarray([5.0, 5.0, 5.0, 5.0, 3.0, 3.0])
 
 # PD torque gains per joint
-KP = np.array([300.0, 200.0, 180.0, 160.0, 80.0, 50.0], dtype=float)
-KD = np.array([8.0, 6.0, 6.0, 5.0, 3.0, 2.0], dtype=float)
+KP = np.array([2000, 1000, 500, 500, 200, 1], dtype=float)
+KD = np.array([50, 20, 20, 20, 20, 0.1], dtype=float)
 
 # Gravity/Coriolis compensation
-USE_BIAS_COMP: bool = True
+USE_BIAS_COMP: bool = False
 MAX_ANGVEL: float = 3.0  # rad/s clamp for dq magnitude
 
 # Joint order to control (matches manipulator_box/scene.xml)
