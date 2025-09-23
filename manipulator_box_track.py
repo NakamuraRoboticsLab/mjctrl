@@ -18,7 +18,7 @@ We also log desired (as mocap_*) and actual site pose to CSV.
 
 # Simulation and IK integration settings
 DT_SIM: float = 0.002         # Must match XML timestep
-T_END: float = 15.0           # Total simulation time [s]
+T_END: float = 20.0           # Total simulation time [s]
 integration_dt: float = 0.1   # IK integration horizon [s]
 damping: float = 1e-4         # DLS damping (lambda)
 Kpos: float = 0.95            # Task-space position gain in [0, 1]
@@ -44,9 +44,19 @@ JOINT_ORDER = [
 
 
 def pose(t: float) -> Tuple[np.ndarray, np.ndarray]:
-    """Desired end-effector pose: constant position and quaternion (wxyz)."""
-    # Constant position
-    pos = np.array([1.300, 0.200, 0.400], dtype=float)
+    """Desired end-effector pose: sinusoidal X, constant Y/Z and
+    quaternion (wxyz)."""
+    # Sinusoid parameters
+    x0 = 0.100  # center X [m]
+    A = 0.1   # amplitude [m]
+    f = 0.5    # frequency [Hz]
+    omega = 2.0 * np.pi * f
+
+    x = 1.000
+    y = x0 + A * np.sin(omega * t)
+    z = 0.350
+    pos = np.array([x, y, z], dtype=float)
+
     # Constant orientation (identity quaternion, wxyz)
     quat = np.array([1.0, 0.0, 0.0, 0.0], dtype=float)
     return pos, quat  # wxyz
