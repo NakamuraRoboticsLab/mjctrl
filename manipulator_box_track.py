@@ -20,7 +20,7 @@ We also log desired (as mocap_*) and actual site pose to CSV.
 DT_SIM: float = 0.002         # Must match XML timestep
 T_END: float = 20.0           # Total simulation time [s]
 integration_dt: float = 0.1   # IK integration horizon [s]
-damping: float = 1e-4         # DLS damping (lambda)
+damping: float = 1e-10         # DLS damping (lambda)
 Kpos: float = 0.95            # Task-space position gain in [0, 1]
 Kori: float = 0.95            # Task-space orientation gain in [0, 1]
 PRINT_PERIOD: float = 0.05    # Console print period [s]
